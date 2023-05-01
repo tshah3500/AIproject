@@ -9,11 +9,9 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 
 df = pd.read_csv('500_anonymized_Reddit_users_posts_labels - 500_anonymized_Reddit_users_posts_labels.csv')
 dataset = df[['Post','Label']]
-print(df['Label'].unqiue())
 
 
-
-cv = TfidfVectorizer(max_df=0.9, min_df=2,max_features=300,stop_words='english')
+cv = TfidfVectorizer(max_df=0.9, min_df=2,max_features=100,stop_words='english')
 text_counts = cv.fit_transform(dataset['Post'])
 
 #print(text_counts.shape)
@@ -21,19 +19,36 @@ text_counts = cv.fit_transform(dataset['Post'])
 vectors = []
 for i in range(0, 500):
     dic = []
-    for j in range(0, 300):
+    for j in range(0, 100):
         dic.append(text_counts[0, j])
     vectors.append(dic)
 dataset['Vectors'] = vectors
 #print("Vectorized!")
 #print(str(cv.get_feature_names_out()[i]) + ": " + str(text_counts[0, i]))
 
-dataset['Label'] = dataset['Label'].replace('Supportive','0').replace('Ideation','1').replace('Behavior','2').replace('Attempt','3').replace('Indicator','4')
-#print(dataset)
+keys = {"Supportive":0, "Ideation":1, "Behavior":2, "Attempt":3, "Indicator":4}
+def output_function(str):
+    output = [0, 0, 0, 0, 0]
+    output[keys[str]] += 1
+    return(output)
 
-accdata = ([dataset['Vectors'],[dataset['Label']]])
-print(accdata)
+#dataset['Label'] = dataset['Label'].replace('Supportive',0).replace('Ideation',1).replace('Behavior',2).replace('Attempt',3).replace('Indicator',4)
+dataset['Output'] = dataset['Label'].apply(output_function)
+#print(dataset['Output'])
+#print(dataset['Label'].unique())
 
-von = NeuralNet()
+final = []
+for i in range(0, 400):
+    curr_list = [dataset['Vectors'][i], dataset['Output'][i]]
+    final.append(curr_list)
+#print(final)
+
+#accdata = ([dataset['Vectors'],[dataset['Label']]])
+#print(accdata)
+
+print("Creating Neural Net")
+von = NeuralNet(100, 50, 5)
+von.train(final)
+
 
 

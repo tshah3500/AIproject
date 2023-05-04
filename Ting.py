@@ -11,7 +11,7 @@ df = pd.read_csv('500_anonymized_Reddit_users_posts_labels - 500_anonymized_Redd
 dataset = df[['Post','Label']]
 
 
-cv = TfidfVectorizer(max_df=0.9, min_df=2,max_features=100,stop_words='english')
+cv = TfidfVectorizer(max_df=0.9, min_df=2,max_features=300,stop_words='english')
 text_counts = cv.fit_transform(dataset['Post'])
 
 #print(text_counts.shape)
@@ -19,7 +19,7 @@ text_counts = cv.fit_transform(dataset['Post'])
 vectors = []
 for i in range(0, 500):
     dic = []
-    for j in range(0, 100):
+    for j in range(0, 300):
         dic.append(text_counts[0, j])
     vectors.append(dic)
 dataset['Vectors'] = vectors
@@ -47,8 +47,9 @@ for i in range(0, 400):
 #print(accdata)
 
 print("Creating Neural Net")
-von = NeuralNet(100, 50, 5)
+von = NeuralNet(300, 25, 5)
 von.train(final)
+
 
 
 

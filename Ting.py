@@ -9,9 +9,11 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 
 df = pd.read_csv('500_anonymized_Reddit_users_posts_labels - 500_anonymized_Reddit_users_posts_labels.csv')
 dataset = df[['Post','Label']]
+dataset.dropna(subset='Post', inplace=True)
+dataset.reset_index(drop=True, inplace=True)
 
 
-cv = TfidfVectorizer(max_df=0.9, min_df=2,max_features=300,stop_words='english')
+cv = TfidfVectorizer(max_df=0.9, min_df=2,max_features=100,stop_words='english')
 text_counts = cv.fit_transform(dataset['Post'])
 
 #print(text_counts.shape)
@@ -19,7 +21,7 @@ text_counts = cv.fit_transform(dataset['Post'])
 vectors = []
 for i in range(0, 500):
     dic = []
-    for j in range(0, 300):
+    for j in range(0, 100):
         dic.append(text_counts[0, j])
     vectors.append(dic)
 dataset['Vectors'] = vectors
@@ -32,24 +34,36 @@ def output_function(str):
     output[keys[str]] += 1
     return(output)
 
+
 #dataset['Label'] = dataset['Label'].replace('Supportive',0).replace('Ideation',1).replace('Behavior',2).replace('Attempt',3).replace('Indicator',4)
+
 dataset['Output'] = dataset['Label'].apply(output_function)
 #print(dataset['Output'])
 #print(dataset['Label'].unique())
 
-final = []
+training = []
 for i in range(0, 400):
     curr_list = [dataset['Vectors'][i], dataset['Output'][i]]
-    final.append(curr_list)
+    training.append(curr_list)
+
+testing = []
+for i in range(400, 500):
+    #curr_list = [dataset['Vectors'][i], dataset['Output'][i]]
+    testing.append(dataset['Vectors'][i])
 #print(final)
 
 #accdata = ([dataset['Vectors'],[dataset['Label']]])
 #print(accdata)
 
 print("Creating Neural Net")
-von = NeuralNet(300, 25, 5)
-von.train(final)
+von = NeuralNet(100, 5, 5)
+von.train(training)
 
-
-
+print("Testing Neural Net")
+predictions = von.test(testing)
+outputs = keys = {0:"Supportive", 1:"Ideation", 2:"Behavior", 3:"Attempt", 4:"Indicator"}
+    
+for j in range(0, 100):
+    i = predictions[j]
+    print("Predicted: " + str(outputs[i.index(max(i))]) + " Actual: " + str(outputs[dataset['Output'][j + 400].index(max(dataset['Output'][j + 400]))]))
 
